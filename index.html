@@ -224,7 +224,7 @@
     </footer>
   </main>
 
- <script>
+<script>
   document.addEventListener('DOMContentLoaded', () => {
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
@@ -278,7 +278,6 @@
       e.preventDefault();
       const userMessage = userInput.value.trim();
 
-      // ⭐ If user provided a key → use it. Otherwise → use your key.
       const apiKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
 
       if (!userMessage) return;
@@ -302,7 +301,8 @@
         );
 
         const data = await response.json();
-        chatBox.removeChild(typing);
+
+        typing.remove();   // ⭐ safe remove
 
         if (!response.ok)
           throw new Error(data.error?.message || "Unknown error");
@@ -311,7 +311,9 @@
         await animateReply(botReply);
 
       } catch (err) {
-        chatBox.removeChild(typing);
+
+        typing.remove();   // ⭐ safe remove again
+
         addMessage(`ERROR: ${err.message}`, 'error-message');
       }
     });
@@ -342,6 +344,8 @@
 </script>
 
 
+
 </body>
 </html>
+
 
