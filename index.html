@@ -235,19 +235,21 @@
     const themeToggle = document.getElementById('theme-toggle');
     const downloadChat = document.getElementById('download-chat');
 
-    // ⭐ YOUR DEFAULT API KEY HERE
+    // ⭐ DEFAULT API KEY
     const DEFAULT_API_KEY = "AIzaSyAO4dL8twfmL024vpwD90qS7XyZK_Kpspk";
 
-    const MODEL_NAME = "gemini-1.5-flash-latest";
+    // ⭐ WORKING GOOGLE MODELS (v1beta)
+    const PRIMARY_MODEL = "models/gemini-1.5-flash";
+    const BACKUP_MODEL  = "models/gemini-1.5-pro";
+
     const SYSTEM_INSTRUCTION =
-      "You are a Data Structures and Algorithms expert. Provide a detailed explanation...";
+      "You are a Data Structures and Algorithms expert. Provide detailed, structured explanations.";
 
     apiKeyInput.addEventListener('input', () => {
-      if (apiKeyInput.value.trim().length > 10) {
-        connectionStatus.textContent = '✅ Custom API Key Connected.';
-      } else {
-        connectionStatus.textContent = '🔑 Using Default API Key.';
-      }
+      if (apiKeyInput.value.trim().length > 10)
+        connectionStatus.textContent = "✅ Custom API Key Connected.";
+      else
+        connectionStatus.textContent = "🔑 Using Default API Key.";
     });
 
     themeToggle.addEventListener('click', () => {
@@ -258,41 +260,66 @@
 
     clearChat.addEventListener('click', () => {
       chatBox.innerHTML =
-        '<div class="message bot-message">Greetings. First, paste your Google AI API Key above. Then, ask me about a data structure or an algorithm, or don\'t waste my time.</div>';
+        '<div class="message bot-message">Greetings. First, paste your Google AI API Key above. Then, ask me about a data structure or an algorithm.</div>';
     });
 
     downloadChat.addEventListener('click', () => {
       const text = [...chatBox.querySelectorAll('.message')]
         .map(el => el.textContent)
         .join('\n\n');
-      const blob = new Blob([text], { type: 'text/plain' });
+      const blob = new Blob([text], { type: "text/plain" });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'chat-history.txt';
+      link.download = "chat-history.txt";
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
     });
 
     chatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const userMessage = userInput.value.trim();
 
+      const userMessage = userInput.value.trim();
+      if (!userMessage) return;
       const apiKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
 
-      if (!userMessage) return;
+      addMessage(userMessage, "user-message");
+      userInput.value = "";
 
-      addMessage(userMessage, 'user-message');
-      userInput.value = '';
-
-      const typing = addMessage("The expert is thinking...", 'typing-indicator');
+      const typing = addMessage("The expert is thinking...", "typing-indicator");
 
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`,
+        const botReply = await callModel(userMessage, apiKey);
+        typing.remove();
+        await animateReply(botReply);
+
+      } catch (err) {
+        typing.remove();
+        addMessage(`ERROR: ${err.message}`, "error-message");
+      }
+    });
+
+    // ⭐ First try Flash → if not found, fallback to Pro
+    async function callModel(userMessage, apiKey) {
+      let response = await requestGemini(PRIMARY_MODEL, userMessage, apiKey);
+
+      // If flash fails → auto fallback to pro
+      if (response.error === "NOT_FOUND") {
+        response = await requestGemini(BACKUP_MODEL, userMessage, apiKey);
+      }
+
+      if (response.error) throw new Error(response.error);
+      return response.text;
+    }
+
+    // ⭐ Actual fetch logic
+    async function requestGemini(model, userMessage, apiKey) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${apiKey}`,
           {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: userMessage }] }],
               systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] }
@@ -300,23 +327,22 @@
           }
         );
 
-        const data = await response.json();
+        const data = await res.json();
 
-        typing.remove();   // ⭐ safe remove
+        if (!res.ok) {
+          if (data.error?.message?.includes("not found")) {
+            return { error: "NOT_FOUND" };
+          }
+          return { error: data.error?.message || "Unknown API error" };
+        }
 
-        if (!response.ok)
-          throw new Error(data.error?.message || "Unknown error");
-
-        const botReply = data.candidates[0].content.parts[0].text;
-        await animateReply(botReply);
+        const text = data.candidates[0].content.parts[0].text;
+        return { text };
 
       } catch (err) {
-
-        typing.remove();   // ⭐ safe remove again
-
-        addMessage(`ERROR: ${err.message}`, 'error-message');
+        return { error: err.message };
       }
-    });
+    }
 
     function addMessage(text, className) {
       const div = document.createElement('div');
@@ -345,7 +371,9 @@
 
 
 
+
 </body>
 </html>
+
 
 
