@@ -1,379 +1,753 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DSA AI Expert Bot</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DSA AI Expert Bot — Enhanced</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg-light: #f9f9f9;
-      --bg-dark: #121212;
-      --text-light: #1f1f1f;
-      --text-dark: #e0e0e0;
-      --primary-light: #ffffff;
-      --primary-dark: #1e1e1e;
-      --secondary-light: #e2e2e2;
-      --secondary-dark: #2a2a2a;
-      --accent-light: #007bff;
-      --accent-dark: #03dac6;
-      --error-color: #cf6679;
+    :root{
+      --bg-dark: #0f1720;
+      --bg-light: #f6f8fb;
+      --panel-dark: #111318;
+      --panel-light: #ffffff;
+      --bot-bg: #1f2937;
+      --user-bg: #00bcd4;
+      --muted: #9aa4b2;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --danger: #ef4444;
+      --radius: 14px;
+      --glass: rgba(255,255,255,0.03);
+      --shadow: 0 6px 20px rgba(2,6,23,0.6);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: 'Inter', sans-serif;
-      transition: background-color 0.3s ease, color 0.3s ease;
+    /* Theme defaults = dark */
+    html[data-theme="dark"]{
+      background: linear-gradient(180deg,var(--bg-dark), #071018);
+      color: #e6eef6;
+    }
+    html[data-theme="light"]{
+      background: var(--bg-light);
+      color: #0b1220;
     }
 
-    body.light-mode {
-      background-color: var(--bg-light);
-      color: var(--text-light);
-    }
-    body.dark-mode {
-      background-color: var(--bg-dark);
-      color: var(--text-dark);
-    }
-
-    .chat-container {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
     }
 
-    .chat-header {
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: var(--primary-dark);
-    }
-    body.light-mode .chat-header {
-      background-color: var(--primary-light);
-    }
-
-    .chat-header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: var(--accent-dark);
-    }
-    body.light-mode .chat-header h1 {
-      color: var(--accent-light);
+    .app {
+      width:100%;
+      max-width:980px;
+      height:92vh;
+      display:flex;
+      flex-direction:column;
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border: 1px solid rgba(255,255,255,0.03);
     }
 
-    .controls {
-      display: flex;
-      gap: 0.5rem;
+    /* Header */
+    .top {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 16px;
+      gap:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
     }
-    .controls button {
-      padding: 0.4rem 0.8rem;
-      font-size: 0.9rem;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-      transition: background 0.2s ease;
+    .brand {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      font-weight:700;
+      letter-spacing:0.2px;
     }
-    .theme-toggle {
-      background-color: #444;
-      color: #fff;
+    .brand .logo {
+      width:44px;height:44px;border-radius:10px;
+      display:grid;place-items:center;
+      background: linear-gradient(135deg, var(--accent), #0077be);
+      color:white;font-weight:700;
+      box-shadow: 0 4px 14px rgba(3, 10, 18, 0.5);
     }
-    .clear-btn {
-      background-color: #888;
-      color: #fff;
+    .controls { display:flex; gap:8px; align-items:center; }
+
+    .controls button, .controls label {
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      color:inherit;
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      transition: transform .12s ease, background .12s;
+      backdrop-filter: blur(2px);
     }
-    .download-btn {
-      background-color: #0055aa;
-      color: white;
+    .controls button:hover { transform: translateY(-2px); }
+    .controls .danger { border-color: rgba(239,68,68,0.18); color:var(--danger); }
+
+    /* layout */
+    .main {
+      display:flex;
+      flex:1;
+      gap:0;
     }
 
-    .api-key-section {
-      padding: 0.75rem 1rem;
-      background-color: var(--secondary-dark);
-    }
-    body.light-mode .api-key-section {
-      background-color: var(--secondary-light);
-    }
-
-    #api-key-input {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-family: 'Inter', sans-serif;
+    /* chat column */
+    .chat-col {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
     }
 
-    #connection-status {
-      padding-top: 0.4rem;
-      font-size: 0.9rem;
-      color: var(--accent-dark);
+    .chat-window {
+      padding:18px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      -webkit-overflow-scrolling: touch;
+    max-height: 70vh;     /* chat area gets scrollable */
+  overflow-y: auto;     /* enables vertical scrolling */
+  scroll-behavior: smooth;  /* smooth scrolling */
+
+
     }
 
-    .chat-box {
-      flex-grow: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      background-color: var(--secondary-dark);
-    }
-    body.light-mode .chat-box {
-      background-color: var(--secondary-light);
-    }
-
+    /* message row */
     .message {
-      padding: 0.8rem 1rem;
-      border-radius: 14px;
-      max-width: 80%;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-    }
-    .user-message {
-      background-color: var(--accent-dark);
-      color: #000;
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
-    }
-    .bot-message {
-      background-color: #333;
-      color: white;
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
-    }
-    .error-message {
-      background-color: var(--error-color);
-      color: #000;
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
-    }
-    .typing-indicator {
-      font-style: italic;
-      color: #999;
-      align-self: flex-start;
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+      max-width:85%;
+      opacity:0;
+      transform: translateY(6px);
+      animation: fadeInUp .22s ease forwards;
     }
 
-    .chat-input-area {
-      display: flex;
-      padding: 1rem;
-      background-color: var(--primary-dark);
-    }
-    body.light-mode .chat-input-area {
-      background-color: var(--primary-light);
+    @keyframes fadeInUp {
+      to { opacity:1; transform: translateY(0); }
     }
 
-    #user-input {
-      flex-grow: 1;
-      padding: 0.8rem;
-      border-radius: 20px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
+    .message.bot { align-self:flex-start; }
+    .message.user { align-self:flex-end; flex-direction:row-reverse; }
+
+    .avatar {
+      width:40px;height:40px;border-radius:10px;flex-shrink:0;
+      display:grid;place-items:center;
+      background:linear-gradient(180deg,#06111a, #0b2230);
+      color:white;font-weight:700;
+      border:1px solid rgba(255,255,255,0.03);
     }
 
-    #send-btn {
-      background-color: var(--accent-dark);
-      border: none;
-      margin-left: 0.5rem;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+    .bubble {
+      padding:12px 14px;
+      border-radius:12px;
+      line-height:1.35;
+      position:relative;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+      max-width:720px;
+      word-break:break-word;
     }
-    #send-btn svg {
-      fill: #000;
+
+    .bubble.bot {
+      background:var(--bot-bg);
+      color: #e6eef6;
+      border-bottom-left-radius:6px;
+      border-bottom-right-radius:12px;
+    }
+    .bubble.user {
+      background:var(--user-bg);
+      color:#022224;
+      border-bottom-right-radius:6px;
+      border-bottom-left-radius:12px;
+    }
+
+    .meta {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:11px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    .timestamp { opacity:0.9; font-size:11px; }
+
+    /* input area */
+    .composer {
+      padding:12px;
+      border-top:1px solid rgba(255,255,255,0.02);
+      display:flex;
+      gap:12px;
+      align-items:flex-end;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+    }
+
+    .left-actions { display:flex; gap:8px; align-items:center; }
+    .textarea-wrap { flex:1; display:flex; flex-direction:column; gap:8px; }
+    textarea#user-input {
+      width:100%;
+      min-height:56px;
+      max-height:160px;
+      resize:vertical;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.02);
+      color: inherit;
+      outline:none;
+      font-size:15px;
+      line-height:1.35;
+    }
+    button.primary {
+      padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:700;
+      background: linear-gradient(90deg,var(--accent), #0077be);
+      color:white;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.4);
+    }
+
+    /* small helpers */
+    .small {
+      font-size:12px;color:var(--muted);
+    }
+
+    /* light theme tweaks */
+    html[data-theme="light"] .controls button, html[data-theme="light"] .controls label {
+      border-color: rgba(10,14,22,0.06);
+      background: rgba(10,14,22,0.02);
+    }
+    html[data-theme="light"] .bubble.bot { background:#f3f5f8; color:#0b1220; box-shadow:none; }
+    html[data-theme="light"] .bubble.user { background:#e6f6f7; color:#052c2c; box-shadow:none; }
+    html[data-theme="light"] .avatar { background:linear-gradient(180deg,#f0f7fb,#e7f5fb); color:#0b1220; border:1px solid rgba(2,6,23,0.04); }
+
+    /* modal for API selection */
+    #api-modal {
+      position:fixed; inset:0; display:grid; place-items:center; z-index:9999;
+      background: linear-gradient(180deg, rgba(2,6,23,0.56), rgba(2,6,23,0.85));
+    }
+    .modal-box {
+      width:96%;max-width:520px;border-radius:12px;padding:20px;background:var(--panel-dark); color:inherit;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .modal-box input {
+      width:100%; padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:inherit;
+    }
+    .row { display:flex; gap:10px; margin-top:12px; align-items:center; }
+
+    /* hover small timestamp bubble */
+    .bubble:hover .timestamp { opacity:1; transform: translateY(0); }
+
+    /* responsive */
+    @media (max-width:720px){
+      .app{ height:98vh; max-width:100%;}
+      .brand .logo { width:38px;height:38px;}
     }
   </style>
 </head>
-<body class="dark-mode">
-  <main class="chat-container">
-    <header class="chat-header">
-      <h1>DSA AI Expert Bot</h1>
+<body data-theme="dark">
+  <!-- API modal -->
+  <div id="api-modal">
+    <div class="modal-box">
+      <h2 style="margin:0 0 8px 0">Select API Mode</h2>
+      <p class="small" style="margin:0 0 12px 0">Choose default API or use your own key.</p>
+      <div class="row">
+        <button id="use-default" class="primary">Use Default API</button>
+        <button id="use-custom">Use My API Key</button>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <input id="custom-api-input" type="password" placeholder="Enter your API key..." style="display:none;">
+        <button id="save-custom" style="display:none;" class="primary">Save & Continue</button>
+      </div>
+
+      <p class="small" style="margin-top:10px;color:var(--muted)">Note: The default key is provided for quick testing. Replace with your own key for production.</p>
+    </div>
+  </div>
+
+  <main class="app" id="app" style="display:none;">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">DSA</div>
+        <div>
+          <div style="font-size:14px">DSA AI Expert Bot</div>
+          <div class="small" style="opacity:0.8">Ask anything about data structures & algorithms</div>
+        </div>
+      </div>
+
       <div class="controls">
-        <button class="clear-btn" id="clear-chat">Clear Chat</button>
-        <button class="download-btn" id="download-chat">Download</button>
-        <button class="theme-toggle" id="theme-toggle">☀️</button>
+        <button id="clear-chat" class="danger">Clear</button>
+        <button id="download-txt">Download</button>
+        <button id="download-pdf">Export PDF</button>
+        <label id="enter-toggle" title="Enter to Send">
+          <input type="checkbox" id="enter-to-send" checked style="margin-right:8px"> Enter to Send
+        </label>
+        <button id="theme-toggle">☀️</button>
       </div>
     </header>
-    <section class="api-key-section">
-      <input type="password" id="api-key-input" placeholder="PASTE YOUR GOOGLE AI API KEY HERE">
-      <div id="connection-status"></div>
-    </section>
-    <div class="chat-box" id="chat-box">
-      <div class="message bot-message">
-        Greetings. First, paste your Google AI API Key above. Then, ask me about a data structure or an algorithm, or don't waste my time.
+
+    <div class="main">
+      <section class="chat-col">
+        <div id="chat-window" class="chat-window" role="log" aria-live="polite">
+          <!-- messages render here -->
+        </div>
+      </section>
+    </div>
+
+  <footer class="composer">
+  <div class="left-actions small">
+    <div class="small">Avatars</div>
+  </div>
+
+  <div class="textarea-wrap">
+    <textarea id="user-input" placeholder="Ask about DSA..."></textarea>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="small" id="status-msg">Ready</div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="search-btn" class="primary">Search</button> <!-- ⭐ Added here -->
+        <button id="send-btn" class="primary">Send</button>
       </div>
     </div>
-    <footer class="chat-input-area">
-      <form id="chat-form" style="display: flex; width: 100%;">
-        <input type="text" id="user-input" placeholder="e.g., Explain hash tables... (Press Enter to Send)" autocomplete="off" required>
-        <button type="submit" id="send-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </button>
-      </form>
-    </footer>
+  </div>
+</footer>
+
   </main>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const chatBox = document.getElementById('chat-box');
+  <script>
+  // -------------------------
+  // App behavior
+  // -------------------------
+  (function(){
+    // Elements
+    const modal = document.getElementById('api-modal');
+    const app = document.getElementById('app');
+    const useDefaultBtn = document.getElementById('use-default');
+    const useCustomBtn = document.getElementById('use-custom');
+    const customInput = document.getElementById('custom-api-input');
+    const saveCustomBtn = document.getElementById('save-custom');
+
+    const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('user-input');
-    const apiKeyInput = document.getElementById('api-key-input');
-    const chatForm = document.getElementById('chat-form');
-    const connectionStatus = document.getElementById('connection-status');
-    const clearChat = document.getElementById('clear-chat');
+    const sendBtn = document.getElementById('send-btn');
+    const clearBtn = document.getElementById('clear-chat');
+    const downloadTxtBtn = document.getElementById('download-txt');
+    const downloadPdfBtn = document.getElementById('download-pdf');
     const themeToggle = document.getElementById('theme-toggle');
-    const downloadChat = document.getElementById('download-chat');
+    const enterToggle = document.getElementById('enter-to-send');
+    const statusMsg = document.getElementById('status-msg');
 
-    // ⭐ DEFAULT API KEY
-    const DEFAULT_API_KEY = "AIzaSyAO4dL8twfmL024vpwD90qS7XyZK_Kpspk";
+    // API keys
+    let ACTIVE_API_KEY = '';
+    const DEFAULT_API_KEY = 'AIzaSyAO4dL8twfmL024vpwD90qS7XyZK_Kpspk';
 
-    // ⭐ WORKING GOOGLE MODELS (v1beta)
-    const PRIMARY_MODEL = "models/gemini-1.5-flash";
-    const BACKUP_MODEL  = "models/gemini-1.5-pro";
+    // localStorage keys
+    const LS_KEY = 'dsa_chat_history_v1';
+    const LS_THEME = 'dsa_chat_theme';
+    const LS_ENTER = 'dsa_enter_to_send';
 
-    const SYSTEM_INSTRUCTION =
-      "You are a Data Structures and Algorithms expert. Provide detailed, structured explanations.";
+    // State
+    let isDark = true;
+    let typingAbortController = null;
 
-    apiKeyInput.addEventListener('input', () => {
-      if (apiKeyInput.value.trim().length > 10)
-        connectionStatus.textContent = "✅ Custom API Key Connected.";
-      else
-        connectionStatus.textContent = "🔑 Using Default API Key.";
-    });
-
-    themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('light-mode');
-      document.body.classList.toggle('dark-mode');
-      themeToggle.textContent = document.body.classList.contains('light-mode') ? '🌙' : '☀️';
-    });
-
-    clearChat.addEventListener('click', () => {
-      chatBox.innerHTML =
-        '<div class="message bot-message">Greetings. First, paste your Google AI API Key above. Then, ask me about a data structure or an algorithm.</div>';
-    });
-
-    downloadChat.addEventListener('click', () => {
-      const text = [...chatBox.querySelectorAll('.message')]
-        .map(el => el.textContent)
-        .join('\n\n');
-      const blob = new Blob([text], { type: "text/plain" });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = "chat-history.txt";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    });
-
-    chatForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const userMessage = userInput.value.trim();
-      if (!userMessage) return;
-      const apiKey = apiKeyInput.value.trim() || DEFAULT_API_KEY;
-
-      addMessage(userMessage, "user-message");
-      userInput.value = "";
-
-      const typing = addMessage("The expert is thinking...", "typing-indicator");
-
-      try {
-        const botReply = await callModel(userMessage, apiKey);
-        typing.remove();
-        await animateReply(botReply);
-
-      } catch (err) {
-        typing.remove();
-        addMessage(`ERROR: ${err.message}`, "error-message");
-      }
-    });
-
-    // ⭐ First try Flash → if not found, fallback to Pro
-    async function callModel(userMessage, apiKey) {
-      let response = await requestGemini(PRIMARY_MODEL, userMessage, apiKey);
-
-      // If flash fails → auto fallback to pro
-      if (response.error === "NOT_FOUND") {
-        response = await requestGemini(BACKUP_MODEL, userMessage, apiKey);
-      }
-
-      if (response.error) throw new Error(response.error);
-      return response.text;
+    // Utility: format time HH:MM AM/PM
+    function fmtTime(ts) {
+      const d = new Date(ts);
+      let h = d.getHours(), m = d.getMinutes();
+      const am = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      m = m.toString().padStart(2,'0');
+      return `${h}:${m} ${am}`;
     }
 
-    // ⭐ Actual fetch logic
-    async function requestGemini(model, userMessage, apiKey) {
+    // message render
+    function createMessageEl(msgObj, animate = true){
+      // msgObj: {role: 'bot'|'user', text: '...', time: 123456789}
+      const row = document.createElement('div');
+      row.className = 'message ' + (msgObj.role === 'user' ? 'user' : 'bot');
+
+      // avatar
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.innerHTML = msgObj.role === 'user' ? userAvatarSVG() : botAvatarSVG();
+
+      // bubble
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ' + (msgObj.role === 'user' ? 'user' : 'bot');
+      bubble.setAttribute('data-ts', msgObj.time);
+
+      // content
+      const content = document.createElement('div');
+      content.className = 'content';
+      content.textContent = msgObj.text;
+
+      // meta (timestamp)
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const ts = document.createElement('div');
+      ts.className = 'timestamp';
+      ts.textContent = fmtTime(msgObj.time);
+      meta.appendChild(ts);
+
+      bubble.appendChild(content);
+      bubble.appendChild(meta);
+
+      if(msgObj.role === 'user'){
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+      } else {
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+      }
+
+      if (!animate){
+        row.style.opacity = 1;
+        row.style.transform = 'none';
+      }
+      return {row, bubble, content};
+    }
+
+    // avatars (small inline SVGs)
+    function botAvatarSVG(){
+      return `
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4" fill="url(#g)"></rect>
+          <defs>
+            <linearGradient id="g" x1="0" x2="1">
+              <stop offset="0" stop-color="#06b6d4"/>
+              <stop offset="1" stop-color="#0077be"/>
+            </linearGradient>
+          </defs>
+          <path d="M8.5 11.5C9.328 11.5 10 10.828 10 10C10 9.172 9.328 8.5 8.5 8.5C7.672 8.5 7 9.172 7 10C7 10.828 7.672 11.5 8.5 11.5Z" fill="#0b1220" />
+          <path d="M15.5 11.5C16.328 11.5 17 10.828 17 10C17 9.172 16.328 8.5 15.5 8.5C14.672 8.5 14 9.172 14 10C14 10.828 14.672 11.5 15.5 11.5Z" fill="#0b1220" />
+        </svg>
+      `;
+    }
+    function userAvatarSVG(){
+      return `
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="12" cy="8" r="3" fill="#012b2b" />
+          <path d="M4 20c0-3.314 2.686-6 6-6h4c3.314 0 6 2.686 6 6" fill="#012b2b" />
+        </svg>
+      `;
+    }
+
+    // Save & load history
+    function saveHistory(history){
       try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: userMessage }] }],
-              systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] }
-            })
-          }
-        );
+        localStorage.setItem(LS_KEY, JSON.stringify(history));
+      } catch(e){ console.warn('ls save failed', e); }
+    }
+    function loadHistory(){
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e){ return []; }
+    }
 
-        const data = await res.json();
+    // Render full history
+    function renderHistory(){
+      chatWindow.innerHTML = '';
+      const history = loadHistory();
+      for (const m of history){
+        const {row} = createMessageEl(m, true);
+        chatWindow.appendChild(row);
+      }
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
 
-        if (!res.ok) {
-          if (data.error?.message?.includes("not found")) {
-            return { error: "NOT_FOUND" };
-          }
-          return { error: data.error?.message || "Unknown API error" };
+    // Append message to chat and persist
+    function appendMessage(obj, {save=true, animate=true} = {}){
+      const now = obj.time || Date.now();
+      obj.time = now;
+      const {row, bubble, content} = createMessageEl(obj, animate);
+      if(obj.role === 'bot'){
+        // fill bubble using typing animation
+        content.textContent = ''; // we'll animate into it
+        chatWindow.appendChild(row);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        animateTyping(content, obj.text).then(()=>{
+          // after typing done, save
+          const hist = loadHistory();
+          hist.push(obj);
+          if(save) saveHistory(hist);
+        });
+      } else {
+        content.textContent = obj.text;
+        chatWindow.appendChild(row);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        if(save){
+          const hist = loadHistory();
+          hist.push(obj);
+          saveHistory(hist);
         }
-
-        const text = data.candidates[0].content.parts[0].text;
-        return { text };
-
-      } catch (err) {
-        return { error: err.message };
       }
     }
 
-    function addMessage(text, className) {
-      const div = document.createElement('div');
-      div.className = `message ${className}`;
-      div.textContent = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return div;
+    // Typing animation: returns a promise that resolves at end
+    function animateTyping(element, fullText, speed = 18){
+      // cancel previous
+      if(typingAbortController){
+        typingAbortController.abort();
+      }
+      typingAbortController = new AbortController();
+      const signal = typingAbortController.signal;
+
+      return new Promise((resolve)=>{
+        let i = 0;
+        element.textContent = '';
+        const id = setInterval(()=>{
+          if(signal.aborted){
+            clearInterval(id);
+            element.textContent = fullText;
+            resolve();
+            return;
+          }
+          element.textContent += fullText.charAt(i++);
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+          if(i > fullText.length - 1){
+            clearInterval(id);
+            resolve();
+          }
+        }, speed);
+      });
     }
 
-    async function animateReply(text) {
-      const msg = document.createElement('div');
-      msg.className = 'message bot-message';
-      const p = document.createElement('p');
-      msg.appendChild(p);
-      chatBox.appendChild(msg);
+    // Send user message -> call API -> handle bot reply
+    async function handleSend(){
+      const text = userInput.value.trim();
+      if(!text) return;
+      // add user message
+      const userMsg = {role:'user', text, time: Date.now()};
+      appendMessage(userMsg, {save:true, animate:true});
+      userInput.value = '';
+      statusMsg.textContent = 'Waiting for AI...';
+      // Add temporary "Thinking..." bubble (we will replace by the real bot message via typing)
+      // We don't push the temporary to history; we will push the real reply after typing
+      const thinkingObj = {role:'bot', text: 'Thinking...', time: Date.now()};
+      const {row, bubble, content} = createMessageEl(thinkingObj, true);
+      content.textContent = 'Thinking...';
+      chatWindow.appendChild(row);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
 
-      for (let i = 0; i < text.length; i++) {
-        p.textContent += text[i];
-        chatBox.scrollTop = chatBox.scrollHeight;
-        await new Promise(res => setTimeout(res, 10));
+      // Call API
+      let botReply = '';
+      try {
+        botReply = await callGemini(text);
+      } catch (err){
+        botReply = 'Error: ' + (err.message || String(err));
+      }
+
+      // remove thinking bubble
+      try { row.remove(); } catch(e){}
+
+      // Append actual bot reply using typing animation
+      const botMsg = {role:'bot', text: botReply, time: Date.now()};
+      appendMessage(botMsg, {save:true, animate:true});
+      statusMsg.textContent = 'Ready';
+    }
+
+    // Simple Gemini call (keeps your existing request shape)
+    async function callGemini(message){
+      if(!ACTIVE_API_KEY) throw new Error('No API key set');
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(ACTIVE_API_KEY)}`;
+      const body = {
+  contents: [
+    {
+      role: "user",
+      parts: [
+        { text: "Give short answers only. No long explanations, but satisfy the user" },
+        { text: message }
+      ]
+    }
+  ]
+};
+
+      const res = await fetch(url, { method:'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if(!res.ok){
+        const txt = await res.text();
+        throw new Error('API error: ' + res.status + ' ' + txt);
+      }
+      const data = await res.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      return reply ?? 'Error: Invalid response from API.';
+    }
+
+    // Downloads
+    function downloadTxt(){
+      const hist = loadHistory();
+      if(hist.length === 0) return alert('No chat to download.');
+      let out = hist.map(m => `[${fmtTime(m.time)}] ${m.role.toUpperCase()}: ${m.text}`).join('\n\n');
+      const blob = new Blob([out], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'chat-history.txt'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPdfViaPrint(){
+      const hist = loadHistory();
+      const printWindow = window.open('', '_blank', 'noopener');
+      const css = `
+        body{font-family:Inter,Arial,Helvetica,sans-serif;padding:18px;color:#0b1220;}
+        .msg{margin:10px 0;padding:10px;border-radius:8px;}
+        .bot{background:#eef3fb;}
+        .user{background:#e6f6f7;}
+        .ts{font-size:11px;color:#555;margin-bottom:6px;}
+      `;
+      let html = '<html><head><title>Chat export</title><meta charset="utf-8"><style>' + css + '</style></head><body>';
+      html += `<h3>DSA AI Expert Bot — Chat export</h3><div>`;
+      for(const m of hist){
+        html += `<div class="msg ${m.role}"><div class="ts">${fmtTime(m.time)} — ${m.role.toUpperCase()}</div><div>${escapeHtml(m.text).replace(/\n/g,'<br>')}</div></div>`;
+      }
+      html += '</div></body></html>';
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      // small delay to ensure content is ready
+      setTimeout(()=> printWindow.print(), 400);
+    }
+
+    // Escape html
+    function escapeHtml(s){
+      return (s + '').replace(/[&<>"']/g, function(m){
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+      });
+    }
+
+    // Clear chat
+    function clearChat(confirmBefore=true){
+      if(confirmBefore && !confirm('Clear chat history? This will remove saved messages.')) return;
+      localStorage.removeItem(LS_KEY);
+      chatWindow.innerHTML = '';
+    }
+
+    // Theme toggle
+    function setTheme(dark){
+      isDark = !!dark;
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      localStorage.setItem(LS_THEME, isDark ? 'dark' : 'light');
+      themeToggle.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Load preferences
+    function loadPrefs(){
+      const t = localStorage.getItem(LS_THEME);
+      setTheme(t !== 'light'); // default dark
+      const ent = localStorage.getItem(LS_ENTER);
+      if(ent === null) {
+        enterToggle.checked = true;
+      } else {
+        enterToggle.checked = ent === 'true';
       }
     }
-  });
-</script>
 
+    // Event wiring
+    useDefaultBtn.addEventListener('click', ()=> {
+      ACTIVE_API_KEY = DEFAULT_API_KEY;
+      modal.style.display = 'none';
+      app.style.display = 'flex';
+      renderHistory();
+    });
+    useCustomBtn.addEventListener('click', ()=> {
+      customInput.style.display = 'block';
+      saveCustomBtn.style.display = 'block';
+    });
+    saveCustomBtn.addEventListener('click', ()=> {
+      ACTIVE_API_KEY = customInput.value.trim();
+      modal.style.display = 'none';
+      app.style.display = 'flex';
+      if(!ACTIVE_API_KEY) alert('Saved empty key — you will need to provide a valid API key to call Gemini.');
+      renderHistory();
+    });
 
+    // send on click
+    sendBtn.addEventListener('click', handleSend);
 
+    // Enter-to-send handling (textarea)
+    userInput.addEventListener('keydown', (e)=>{
+      const enterToSend = enterToggle.checked;
+      if(e.key === 'Enter' && enterToSend && !e.shiftKey){
+        e.preventDefault();
+        handleSend();
+      }
+    });
 
+    // toggle persisted enter preference
+    enterToggle.addEventListener('change', ()=>{
+      localStorage.setItem(LS_ENTER, enterToggle.checked ? 'true' : 'false');
+    });
+
+    // clear/download/pdf/theme
+    clearBtn.addEventListener('click', ()=> clearChat(true));
+    downloadTxtBtn.addEventListener('click', downloadTxt);
+    downloadPdfBtn.addEventListener('click', exportPdfViaPrint);
+    themeToggle.addEventListener('click', ()=> setTheme(!isDark));
+
+    // initial load when no modal selection yet: show modal
+    window.addEventListener('load', ()=>{
+      // show modal (it starts visible)
+      app.style.display = 'none';
+      // load theme & pref
+      loadPrefs();
+      // If user previously set API key in session storage, prefill
+      const prevKey = sessionStorage.getItem('dsa:last_api_key');
+      if(prevKey) {
+        // give quick path: use previous key automatically
+        ACTIVE_API_KEY = prevKey;
+        modal.style.display = 'none';
+        app.style.display = 'flex';
+        renderHistory();
+      } else {
+        modal.style.display = 'grid';
+      }
+    });
+
+    // Save API key to session when custom saved
+    saveCustomBtn.addEventListener('click', ()=>{
+      if(ACTIVE_API_KEY) sessionStorage.setItem('dsa:last_api_key', ACTIVE_API_KEY);
+    });
+
+    // Accessibility: focus textarea on app show
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible' && app.style.display !== 'none'){
+        setTimeout(()=> userInput.focus(), 200);
+      }
+    });
+
+    // render sample greeting if empty
+    (function ensureGreeting(){
+      const hist = loadHistory();
+      if(hist.length === 0){
+        // don't persist greeting from API; show sample
+        const greeting = {role:'bot', text: 'Greetings. Ask me anything about DSA.', time: Date.now()};
+        const {row} = createMessageEl(greeting, false);
+        chatWindow.appendChild(row);
+      } else {
+        // if modal was already auto-closed and app visible, render history
+      }
+    })();
+
+    // Expose some helpers to console for debugging
+    window.__DSA_CHAT = {
+      appendMessage, loadHistory, saveHistory, clearChat
+    };
+  })();
+  </script>
 </body>
 </html>
-
-
-
